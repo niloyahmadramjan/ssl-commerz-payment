@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import "./App.css";
+import PaymentStatus from "./PaymentStatus";
 
 export default function App() {
   const [formData, setFormData] = useState({
@@ -35,6 +36,7 @@ export default function App() {
 
   return (
     <div className="container">
+      <PaymentStatus></PaymentStatus>
       <div className="form-box">
         <h2 className="title">SSLCommerz Payment</h2>
         <form onSubmit={handleSubmit}>

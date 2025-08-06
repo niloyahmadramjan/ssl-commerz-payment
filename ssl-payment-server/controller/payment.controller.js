@@ -14,10 +14,10 @@ const initiatePayment = async (req, res) => {
     currency: "BDT",
     tran_id: `Inv-${txs_id}`,
 
-    success_url: "https://localhost:300/payment/success",
-    fail_url: "https://localhost:300/payment/fail",
-    cancel_url: "https://localhost:300/payment/cancel",
-    ipn_url: "https://localhost:300/payment/ipn",
+    success_url: `${process.env.redirectURL}/success`,
+    fail_url: `${process.env.redirectURL}/fail`,
+    cancel_url: `${process.env.redirectURL}/cancel`,
+    ipn_url: `${process.env.redirectURL}/ipn`,
 
     product_name: "T-shirt",
     product_category: "clothing",
@@ -50,14 +50,12 @@ const initiatePayment = async (req, res) => {
   try {
     const response = await axios({
       method: "POST",
-      url: "https://sandbox.sslcommerz.com/gwprocess/v4/api.php",
+      url: process.env.BKASH_URL,
       data: data, 
       headers: {
         "Content-Type": "application/x-www-form-urlencoded"
       }
     });
-
-    console.log("SSLCommerz Response:", response.data);
 
     const gatewayURL = response.data?.GatewayPageURL;
 
@@ -72,4 +70,61 @@ const initiatePayment = async (req, res) => {
   }
 };
 
-module.exports = { initiatePayment };
+
+
+// Handle SSLCommerz payment success
+const paymentSuccess = async (req, res) => {
+  const paymentInfo = req.body;
+
+  try {
+    if (paymentInfo.status === "VALID") {
+      console.log("✅ Payment Success:", paymentInfo);
+
+      // Optionally save paymentInfo to database here...
+
+      // Redirect to success page on frontend
+      return res.redirect(`${process.env.REDIRECT_CLIENTS}/success`);
+    } else {
+      console.warn("⚠️ Payment status is not VALID:", paymentInfo.status);
+      return res.redirect(`${process.env.REDIRECT_CLIENTS}/invalid`);
+    }
+  } catch (error) {
+    console.error("❌ Error in paymentSuccess:", error);
+    return res.redirect(`${process.env.REDIRECT_CLIENTS}/error`);
+  }
+};
+
+// Handle SSLCommerz payment fail
+const paymentFail = async (req, res) => {
+  try {
+    console.log("❌ Payment Failed:", req.body);
+
+    // Optionally save to DB or notify admin...
+
+    // Redirect to fail page on frontend
+    return res.redirect(`${process.env.REDIRECT_CLIENTS}/fail`);
+  } catch (error) {
+    console.error("❌ Error in paymentFail:", error);
+    return res.redirect(`${process.env.REDIRECT_CLIENTS}/error`);
+  }
+};
+
+// Handle SSLCommerz payment cancel
+const paymentCancel = async (req, res) => {
+  try {
+    console.log("⚠️ Payment Cancelled by User:", req.body);
+
+    // Optionally log the cancellation...
+
+    // Redirect to cancel page on frontend
+    return res.redirect(`${process.env.REDIRECT_CLIENTS}/cancel`);
+  } catch (error) {
+    console.error("❌ Error in paymentCancel:", error);
+    return res.redirect(`${process.env.REDIRECT_CLIENTS}/error`);
+  }
+};
+
+
+
+
+module.exports = { initiatePayment ,paymentSuccess,paymentFail,paymentCancel};

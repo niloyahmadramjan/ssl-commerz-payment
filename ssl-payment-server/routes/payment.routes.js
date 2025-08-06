@@ -3,15 +3,15 @@ const router = express.Router();
 
 const {
   initiatePayment,
-//   paymentSuccess,
-//   paymentFail,
-//   paymentCancel,
+  paymentSuccess,
+  paymentFail,
+  paymentCancel,
 } = require('../controller/payment.controller');
 
 router.post('/initiate', initiatePayment);
-// router.post('/success', paymentSuccess);
-// router.post('/fail', paymentFail);
-// router.post('/cancel', paymentCancel);
+router.post('/success', paymentSuccess);
+router.post('/fail', paymentFail);
+router.post('/cancel', paymentCancel);
 
 
 module.exports = router;
