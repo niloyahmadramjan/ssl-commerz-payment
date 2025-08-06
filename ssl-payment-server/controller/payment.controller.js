@@ -20,10 +20,10 @@ const initiatePayment = async (req, res) => {
     currency: "BDT",
     tran_id: `Inv-${txs_id}`,
 
-    success_url: `${process.env.redirectURL}/success`,
-    fail_url: `${process.env.redirectURL}/fail`,
-    cancel_url: `${process.env.redirectURL}/cancel`,
-    ipn_url: `${process.env.redirectURL}/ipn`,
+    success_url: `${process.env.REDIRECT_URL}/success`,
+    fail_url: `${process.env.REDIRECT_URL}/fail`,
+    cancel_url: `${process.env.REDIRECT_URL}/cancel`,
+    ipn_url: `${process.env.REDIRECT_URL}/ipn`,
 
     product_name: "T-shirt",
     product_category: "clothing",
