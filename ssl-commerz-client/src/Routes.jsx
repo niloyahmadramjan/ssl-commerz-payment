@@ -5,6 +5,10 @@ import App from "./App";
 
 export const router = createBrowserRouter([
   {
+    path: "/",
+    element: <App></App>,
+  },
+  {
     path: "/:id",
     element: <App></App>,
   },

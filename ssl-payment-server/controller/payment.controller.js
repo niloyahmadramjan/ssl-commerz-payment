@@ -1,5 +1,10 @@
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
+const { client } = require("../config/db");
+
+// Save to MongoDB
+      const db = client.db("ssl-payment");
+      const PaymentCollection = db.collection("payment-history");
 
 
 const initiatePayment = async (req, res) => {
@@ -7,6 +12,7 @@ const initiatePayment = async (req, res) => {
 
   const txs_id = uuidv4();
 
+   
   const data = {
     store_id: process.env.STORE_ID,
     store_passwd: process.env.STORE_PASS,
@@ -57,6 +63,16 @@ const initiatePayment = async (req, res) => {
       }
     });
 
+      await PaymentCollection.insertOne({
+        customerName: cus_name,
+        customerPhone: cus_phone,
+        customerEmail: cus_email,
+        amount: total_amount,
+        tran_id: data.tran_id,
+        status: "pendding",
+        createdAt: new Date().toISOString(),
+      });
+
     const gatewayURL = response.data?.GatewayPageURL;
 
     if (gatewayURL) {
@@ -78,48 +94,83 @@ const paymentSuccess = async (req, res) => {
 
   try {
     if (paymentInfo.status === "VALID") {
-      console.log("✅ Payment Success:", paymentInfo);
-
-      // Optionally save paymentInfo to database here...
+            // update payment status
+        await PaymentCollection.updateOne(
+        { tran_id: paymentInfo.tran_id }, // match condition
+        {
+          $set: {
+            status: "success",
+            validated_at: new Date(),
+            val_id: paymentInfo.val_id, 
+            card_type: paymentInfo.card_type,
+            store_amount: paymentInfo.store_amount,
+            gateway_response: paymentInfo, 
+          },
+        }
+      );
 
       // Redirect to success page on frontend
       return res.redirect(`${process.env.REDIRECT_CLIENTS}/success`);
     } else {
-      console.warn("⚠️ Payment status is not VALID:", paymentInfo.status);
+      console.warn(" Payment status is not VALID:", paymentInfo.status);
       return res.redirect(`${process.env.REDIRECT_CLIENTS}/invalid`);
     }
   } catch (error) {
-    console.error("❌ Error in paymentSuccess:", error);
+    console.error(" Error in paymentSuccess:", error);
     return res.redirect(`${process.env.REDIRECT_CLIENTS}/error`);
   }
 };
 
-// Handle SSLCommerz payment fail
+// Handle SSLCommerz payment Fail
 const paymentFail = async (req, res) => {
+  const paymentInfo = req.body;
+
   try {
-    console.log("❌ Payment Failed:", req.body);
+    console.log("Payment Failed:", paymentInfo);
 
-    // Optionally save to DB or notify admin...
+    await PaymentCollection.updateOne(
+      { tran_id: paymentInfo.tran_id },
+      {
+        $set: {
+          status: "FAILED",
+          failed_at: new Date(),
+          card_type: paymentInfo.card_type,
+          store_amount: paymentInfo.store_amount,
+          gateway_response: paymentInfo,
+        },
+      }
+    );
 
-    // Redirect to fail page on frontend
     return res.redirect(`${process.env.REDIRECT_CLIENTS}/fail`);
   } catch (error) {
-    console.error("❌ Error in paymentFail:", error);
+    console.error("Error in paymentFail:", error);
     return res.redirect(`${process.env.REDIRECT_CLIENTS}/error`);
   }
 };
 
-// Handle SSLCommerz payment cancel
+// Hanlde  SSLCommerz Cancel
 const paymentCancel = async (req, res) => {
+  const paymentInfo = req.body;
+
   try {
-    console.log("⚠️ Payment Cancelled by User:", req.body);
+    console.log("Payment Cancelled by User:", paymentInfo);
 
-    // Optionally log the cancellation...
+    await PaymentCollection.updateOne(
+      { tran_id: paymentInfo.tran_id },
+      {
+        $set: {
+          status: "CANCELLED",
+          cancelled_at: new Date(),
+          card_type: paymentInfo.card_type,
+          store_amount: paymentInfo.store_amount,
+          gateway_response: paymentInfo,
+        },
+      }
+    );
 
-    // Redirect to cancel page on frontend
     return res.redirect(`${process.env.REDIRECT_CLIENTS}/cancel`);
   } catch (error) {
-    console.error("❌ Error in paymentCancel:", error);
+    console.error("Error in paymentCancel:", error);
     return res.redirect(`${process.env.REDIRECT_CLIENTS}/error`);
   }
 };

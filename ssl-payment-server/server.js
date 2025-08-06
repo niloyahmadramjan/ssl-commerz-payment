@@ -4,7 +4,7 @@ const dotenv = require("dotenv");
 const paymentRoutes = require("./routes/payment.routes");
 
 dotenv.config(); // Load environment variables
-
+const {connectDB} = require("./config/db")
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -13,6 +13,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded());
 // app.use(express.urlencoded({ extended: true }));
+connectDB();
 
 // Routes
 app.get("/", (req, res) => {
