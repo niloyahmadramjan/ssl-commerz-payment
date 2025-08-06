@@ -19,7 +19,7 @@ export default function App() {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post("/api/payment/initiate", formData);
+      const response = await axios.post("http://localhost:3000/api/payment/initiate", formData);
       if (response.data && response.data.GatewayPageURL) {
         window.location.href = response.data.GatewayPageURL;
       } else {
@@ -79,7 +79,9 @@ export default function App() {
             {loading ? "Redirecting..." : "Pay Now"}
           </button>
         </form>
+      
       </div>
+      
     </div>
   );
 }
